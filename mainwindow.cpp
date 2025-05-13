@@ -45,6 +45,30 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+QPoint MainWindow::mapToImageCoordinates(const QPoint& widgetPoint) {
+    QPixmap currentPixmap = ui->label->pixmap();
+    QSize pixmapSize = currentPixmap.size();
+    QSize labelSize = ui->label->size();
+
+    // Центрирование изображения
+    int offsetX = (labelSize.width() - pixmapSize.width()) / 2;
+    int offsetY = (labelSize.height() - pixmapSize.height()) / 2;
+
+    int x = widgetPoint.x() - offsetX;
+    int y = widgetPoint.y() - offsetY;
+
+    // Проверка выхода за границы
+    if (x < 0 || y < 0 || x >= pixmapSize.width() || y >= pixmapSize.height()) {
+        return QPoint(-1, -1);
+    }
+
+    // Масштаб по отношению к оригиналу
+    double scaleX = static_cast<double>(matrixOridin.cols) / pixmapSize.width();
+    double scaleY = static_cast<double>(matrixOridin.rows) / pixmapSize.height();
+
+    return QPoint(x * scaleX, y * scaleY);
+}
+
 //переконвертит Mat в Pixmap
 static QPixmap matToPixmap(const cv::Mat &mat) {
     if (mat.empty()) {
@@ -67,9 +91,8 @@ static QPixmap matToPixmap(const cv::Mat &mat) {
 
 void MainWindow:: displayImage(Mat img) {
     QPixmap npxmap = matToPixmap(img);
-    QPixmap scaled = npxmap.scaled(scrn->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
     ui->label->resize(scrn->size());
-    ui->label->setPixmap(scaled);
+    ui->label->setPixmap(npxmap);
 }
 
 Mat blurImage(const cv::Mat& inputImage, int kernelSize = 5) {
@@ -183,27 +206,8 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
     augmentImage(matrixOridin);
 }
 
-QPoint labelToImageCoords(const QPoint &labelPoint, const QPixmap &pixmap, QLabel *label) {
-    QSize labelSize = label->size();
-    QSize pixmapSize = pixmap.size().scaled(labelSize, Qt::KeepAspectRatio);
-
-    int offsetX = (labelSize.width() - pixmapSize.width()) / 2;
-    int offsetY = (labelSize.height() - pixmapSize.height()) / 2;
-
-    int x = labelPoint.x() - offsetX;
-    int y = labelPoint.y() - offsetY;
-
-    if (x < 0 || y < 0 || x >= pixmapSize.width() || y >= pixmapSize.height())
-        return QPoint(-1, -1);
-
-    double scaleX = static_cast<double>(matrixOridin.cols) / pixmapSize.width();
-    double scaleY = static_cast<double>(matrixOridin.rows) / pixmapSize.height();
-
-    return QPoint(x * scaleX, y * scaleY);
-}
-
 void MainWindow::onLabelPressed(QMouseEvent *event) {
-    QPoint imagePoint = labelToImageCoords(event->pos(), ui->label->pixmap(Qt::ReturnByValue), ui->label);
+    QPoint imagePoint = mapToImageCoordinates(event->pos());
     if (imagePoint.x() < 0 || imagePoint.y() < 0)
         return;
 
@@ -215,7 +219,7 @@ void MainWindow::onLabelPressed(QMouseEvent *event) {
 void MainWindow::onLabelMove(QMouseEvent *event) {
     if (!isDrawing) return;
 
-    QPoint lPoint = labelToImageCoords(event->pos(), ui->label->pixmap(Qt::ReturnByValue), ui->label);
+    QPoint lPoint = mapToImageCoordinates(event->pos());
     if (lPoint.x() < 0 || lPoint.y() < 0)
         return;
 
@@ -228,7 +232,7 @@ void MainWindow::onLabelReleased(QMouseEvent *event) {
     if (!isDrawing) return;
     isDrawing = false;
 
-    QPoint lPoint = labelToImageCoords(event->pos(), ui->label->pixmap(Qt::ReturnByValue), ui->label);
+    QPoint lPoint = mapToImageCoordinates(event->pos());
     if (lPoint.x() < 0 || lPoint.y() < 0)
         return;
 

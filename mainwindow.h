@@ -42,6 +42,8 @@ private slots:
 
     void on_undoButton_clicked();
 
+    QPoint mapToImageCoordinates(const QPoint& widgetPoint);
+
 protected:
     void keyPressEvent(QKeyEvent *event) override;
 };
