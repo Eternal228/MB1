@@ -17,18 +17,26 @@ def do_base_augm(augmentation: str, dir_name_images, dir_name_textes):
         ImageFile.LOAD_TRUNCATED_IMAGES=True
 
         with open(example_text_path) as old_text_file:
-            old_information = list(old_text_file.read().split())
-        new_information = old_information.copy()
+            old_information = [i.split() for i in old_text_file.readlines()]
 
+        new_information = []
         if augmentation == 'mirror':
             new_image = ImageOps.mirror(image)
-            new_information[1] = str(1 - float(old_information[1]))
-            new_information = ' '.join(new_information)
+            for old_line in old_information:
+                new_line = old_line.copy()
+                for i in range(1, len(old_line), 2):
+                    new_line[i] = str(1 - float(old_line[i]))
+                new_information.append(' '.join(new_line))
 
         if augmentation == 'flip':
             new_image = ImageOps.flip(image)
-            new_information[2] = str(1 - float(old_information[2]))
-            new_information = ' '.join(new_information)
+            for old_line in old_information:
+                new_line = old_line.copy()
+                for i in range(2, len(old_line), 2):
+                    new_line[i] = str(1 - float(old_line[i]))
+                new_information.append(' '.join(new_line))
+
+        new_information = '\n'.join(new_information)
 
         with open(example_text_path[:-4] + '_' + augmentation + '.txt', 'w') as new_text_file:
             new_text_file.write(new_information)
