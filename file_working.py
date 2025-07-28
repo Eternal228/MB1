@@ -38,14 +38,14 @@ def rename_images(folder_path):
                 print(f"Ошибка при обработке {filename}: {e}")
 
 
-def fill_the_dataset(dir_name_images, dir_name_textes):
+def fill_the_dataset(dataset_name, dir_name_images, dir_name_textes):
     # Распределение файлов в train и valid  составляющую датасета
     # train - 80% ; valid - 20%
 
-    train_path_images = 'dataset/train/images/'
-    train_path_labels = 'dataset/train/labels/'
-    valid_path_images = 'dataset/valid/images/'
-    valid_path_labels = 'dataset/valid/labels/'
+    train_path_images = f'{dataset_name}/train/images/'
+    train_path_labels = f'{dataset_name}/train/labels/'
+    valid_path_images = f'{dataset_name}/valid/images/'
+    valid_path_labels = f'{dataset_name}/valid/labels/'
 
     all_imag = os.listdir(dir_name_images)
     count_of_files = len(all_imag)
@@ -69,21 +69,21 @@ def fill_the_dataset(dir_name_images, dir_name_textes):
         shutil.move(cur_text, valid_path_labels)
 
 
-def create_empty_dataset():
+def create_empty_dataset(dataset_name):
     # Создание структуры папок, удобной для обучения модели
-    os.makedirs(os.path.join('dataset', 'train', 'labels'))
-    os.makedirs(os.path.join('dataset', 'train', 'images'))
-    os.makedirs(os.path.join('dataset', 'valid', 'labels'))
-    os.makedirs(os.path.join('dataset', 'valid', 'images'))
+    os.makedirs(os.path.join(dataset_name, 'train', 'labels'))
+    os.makedirs(os.path.join(dataset_name, 'train', 'images'))
+    os.makedirs(os.path.join(dataset_name, 'valid', 'labels'))
+    os.makedirs(os.path.join(dataset_name, 'valid', 'images'))
 
 
-def create_yaml(data_folder_path: str, detected_classes: list[int]):
+def create_yaml(data_folder_path: str, class_ides: list[int], class_names):
     yaml_path = f'{data_folder_path}/data.yaml'
     with open(yaml_path, 'w') as yaml:
         yaml.write('train: ../train/images\n')
         yaml.write('val: ../val/images\n')
-        yaml.write(f'nc: {len(detected_classes)}\n')
-        yaml.write(f'names: [{', '.join([f"'{i}'" for i in classes_indexes_to_names(detected_classes)])}]\n')
+        yaml.write(f'nc: {len(class_ides)}\n')
+        yaml.write(f'names: [{', '.join([f"'{class_names[i]}'" for i in class_ides])}]\n')
 
 
 def replace_first_number_in_files(folder_path: str, classes_indexes: list[int]):

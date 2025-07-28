@@ -2,7 +2,7 @@ import sys
 from ultralytics.data.annotator import auto_annotate
 
 
-def annotate_it(input_dir: str, det_model: str = 'yolo11x.pt', sam_model: str = 'sam2.1_b.pt', output_dir: str = 'texts_dir', min_conf: str = '0.35'):
+def coco_annotate_it(input_dir: str, det_model: str = 'yolo11x.pt', sam_model: str = 'sam2.1_b.pt', output_dir: str = 'texts_dir', min_conf: str = '0.35'):
     auto_annotate(det_model=det_model,
                   sam_model=sam_model,
                   output_dir=output_dir,
@@ -13,7 +13,7 @@ def annotate_it(input_dir: str, det_model: str = 'yolo11x.pt', sam_model: str = 
 
 def main():
     argv = sys.argv
-    annotate_it(*argv[1:])
+    coco_annotate_it()
     pass
 
 
