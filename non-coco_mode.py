@@ -148,7 +148,7 @@ def non_coco_mode(images_folder: str, classes: list[str]):
     zero_shot_folder_detection(images_folder, classes, texts_folder, min_confidence=0.025)
     sam_folder_segmentation(images_folder, texts_folder)
     print('segmentation is ready')
-    augmentate_it(dir_name_images=[images_folder], dir_name_textes=[texts_folder])
+    augmentate_it(dir_name_images=images_folder, dir_name_textes=texts_folder)
     print('augmentation is ready')
     dataset_name = 'dataset_sam'
     create_empty_dataset(dataset_name)
