@@ -16,13 +16,13 @@ def do_base_augm(augmentation: str, dir_name_images, dir_name_textes):
     for image_path in all_imag:
 
         image = Image.open(f'{dir_name_images}/{image_path}')
-        example_text_path = f'{dir_name_textes}/{image_path.split('.')[-2]}.txt'
+        if dir_name_images:
+            example_text_path = f'{dir_name_textes}/{image_path.split('.')[-2]}.txt'
 
-
-        ImageFile.LOAD_TRUNCATED_IMAGES=True
-
-        with open(example_text_path) as old_text_file:
-            old_information = [i.split() for i in old_text_file.readlines()]
+        ImageFile.LOAD_TRUNCATED_IMAGES = True
+        if dir_name_images:
+            with open(example_text_path) as old_text_file:
+                old_information = [i.split() for i in old_text_file.readlines()]
 
         new_information = []
         if augmentation == 'mirror':
@@ -42,13 +42,12 @@ def do_base_augm(augmentation: str, dir_name_images, dir_name_textes):
                 new_information.append(' '.join(new_line))
 
         new_information = '\n'.join(new_information)
+        if dir_name_images:
+            with open(example_text_path[:-4] + '_' + augmentation + '.txt', 'w') as new_text_file:
+                new_text_file.write(new_information)
 
-        with open(example_text_path[:-4] + '_' + augmentation + '.txt', 'w') as new_text_file:
-            new_text_file.write(new_information)
-
-        new_image_name = image_path[:-4] + '_' + augmentation + '.jpg'
+        new_image_name = image_path.split('.')[-2] + '.' + image_path.split('.')[-1] + '_' + augmentation + '.jpg'
         new_image.save(f'{dir_name_images}/{new_image_name}')
-
 
 
 def do_hard_augm(augmentation: str, dir_name_images, dir_name_textes):
@@ -79,6 +78,7 @@ def do_hard_augm(augmentation: str, dir_name_images, dir_name_textes):
             with open(f'{dir_name_textes}/{image_path.split('.')[-2]}_{augmentation}{str(i)}' + '.txt', 'w') as new_text_file:
                 new_text_file.write(old_information)
             i += 1
+
 
 def do_hsv_augm(dir_name_images, dir_name_textes):
     # Список кортежей аугметнации типа
@@ -121,6 +121,7 @@ def do_hsv_augm(dir_name_images, dir_name_textes):
                 new_text_file.write(old_information)
             i += 1
 
+
 def do_yolohsv_augm(dir_name_images, dir_name_textes):
     # Список кортежей аугметнации типа
     # (Цветовая гамма, насыщенность, яркость)
@@ -147,10 +148,10 @@ def do_yolohsv_augm(dir_name_images, dir_name_textes):
         image_name = f'{dir_name_images}/{image_path}'
 
         image = cv2.imread(image_name)
-        example_text_path = f'{dir_name_textes}/{image_path.split('.')[-2]}.txt'
-        with open(example_text_path) as old_text_file:
-            old_information = old_text_file.read()
-
+        if dir_name_textes:
+            example_text_path = f'{dir_name_textes}/{image_path.split('.')[-2]}.txt'
+            with open(example_text_path) as old_text_file:
+                old_information = old_text_file.read()
 
         i = 0
         for factor in factors:
@@ -160,7 +161,7 @@ def do_yolohsv_augm(dir_name_images, dir_name_textes):
             hsv_augm(labels)
             augmented_image = labels["img"]
             # 3. Применение HSV-аугментации
-              # Важно использовать copy(), чтобы не менять исходное изображение
+            # Важно использовать copy(), чтобы не менять исходное изображение
 
             '''
             # 4. Отображение оригинального и аугментированного изображений (опционально)
@@ -172,10 +173,12 @@ def do_yolohsv_augm(dir_name_images, dir_name_textes):
 
             # 5. Сохранение аугментированного изображения (опционально)
             cv2.imwrite(new_image_name, augmented_image)
+            if dir_name_textes:
+                with open(f'{example_text_path.split('.')[-2]}_yolohsv{str(i)}.txt', 'w') as new_text_file:
+                    new_text_file.write(old_information)
+                i += 1
 
-            with open(f'{example_text_path.split('.')[-2]}_yolohsv{str(i)}.txt', 'w') as new_text_file:
-                new_text_file.write(old_information)
-            i += 1
+
 def augment_hsv(img, hgain=0.5, sgain=0.5, vgain=0.5):
     """
     Применяет HSV-аугментацию к изображению.
@@ -202,11 +205,10 @@ def augment_hsv(img, hgain=0.5, sgain=0.5, vgain=0.5):
     cv2.cvtColor(im_hsv, cv2.COLOR_HSV2BGR, dst=img)  # no return needed
     return img
 
-def augmentate_it(dir_name_images: str, dir_name_textes: str):
-    # Директории с картинками и текстами к ним
-    # dir_name_images = ['/content/peoples_labeled/train/images/', '/content/peoples_labeled/valid/images/']
-    # dir_name_textes = ['/content/peoples_labeled/train/labels/', '/content/peoples_labeled/valid/labels/']
 
+def augmentate_it(dir_name_images: str, dir_name_textes=None):
+    # Директории с картинками и текстами к ним
+    # Если dir_name_textes = None, выполняется аугментация без разметки текстовых файлов
 
     '''
     list_of_base_augm = ['flip', 'mirror']
