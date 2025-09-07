@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 import torch
 import cv2
@@ -32,10 +34,8 @@ def zero_shot_image_detection(image_path: str, model, output_dir, min_confidence
     image = cv2.imread(image_path)
     results = model.infer(image, confidence=min_confidence)
     detections = sv.Detections.from_inference(results)
-    print(detections.xyxy.tolist())
     hints = detections.xyxy.tolist()
     x, y, _ = image.shape
-    print(x, y)
     for i in range(len(hints)):
         hints[i][0] /= x
         hints[i][2] /= x
@@ -143,20 +143,46 @@ def sam_image_segmentation(predictor, image_path: str, texts_dir: str):
         f.writelines(information)
 
 
-def non_coco_mode(images_folder: str, classes: list[str]):
+def non_coco_mode(images_folder: str, classes: list[str], enable_sementation: bool, enable_augmentation: bool, enable_dataset:bool,  dataset_train_percent:float, dataset_name=None):
+    # Здесь и далее все строчки со временем можешь удалить или использовать, если планируется вывод пользователю затраченного времени
+    t_start = time.time()
+    dataset_name = dataset_name or 'dataset'
     texts_folder = f'{images_folder}_texts'
-    zero_shot_folder_detection(images_folder, classes, texts_folder, min_confidence=0.025)
-    sam_folder_segmentation(images_folder, texts_folder)
-    print('segmentation is ready')
-    augmentate_it(dir_name_images=images_folder, dir_name_textes=texts_folder)
-    print('augmentation is ready')
-    dataset_name = 'dataset_sam'
-    create_empty_dataset(dataset_name)
-    fill_the_dataset(dataset_name, images_folder, texts_folder)
-    create_yaml(dataset_name, list(range(len(classes))), classes)
+    print("Размечаю...")
+    t11 = time.time()
+    zero_shot_folder_detection(images_folder, classes, texts_folder, min_confidence=0.005)
+    t12 = time.time()
+    print(f"Разметка завершена! Времени затрачено - {t12-t11}, времени прошло - {t12 - t_start}")
+
+    if enable_sementation:
+        print("Сегментирую...")
+        t21 = time.time()
+        sam_folder_segmentation(images_folder, texts_folder)
+        t22 = time.time()
+        print(f"Сегментация завершена! Времени затрачено - {t22-t21}, времени прошло - {t22-t_start}")
+
+    if enable_augmentation:
+        print("Аугментирую...")
+        t31 = time.time()
+        augmentate_it(dir_name_images=images_folder, dir_name_textes=texts_folder)
+        t32 = time.time()
+        print(f"Аугментация завершена! Времени затрачено - {t32-t31}, времени прошло - {t32-t_start}")
+    if enable_dataset:
+        print("Собираю датасет...")
+        create_empty_dataset(dataset_name)
+        fill_the_dataset(dataset_name, images_folder, texts_folder, dataset_train_percent)
+        create_yaml(dataset_name, list(range(len(classes))), classes)
+    print("Готово!")
+    print(f"Общее затраченное время - {time.time() - t_start}")
 
 
 if __name__ == "__main__":
     images_folder = 'data'
-    classes = ['man', 'head', 'hand', 'eye', 'nose', 'apple', 'pants']
-    non_coco_mode(images_folder, classes)
+
+    classes = ['tie', 'head', 'shoes', 'hand']
+    enable_sementation = True
+    enable_augmentation = True
+    enable_dataset = True
+    dataset_name = 'dataset'
+    dataset_train_percent = 0.8
+    non_coco_mode(images_folder, classes, enable_sementation, enable_augmentation, enable_dataset,  dataset_train_percent, dataset_name)
