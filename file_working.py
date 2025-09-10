@@ -38,7 +38,7 @@ def rename_images(folder_path):
                 print(f"Ошибка при обработке {filename}: {e}")
 
 
-def fill_the_dataset(dataset_name, dir_name_images, dir_name_textes):
+def fill_the_dataset(dataset_name, dir_name_images, dir_name_textes, dataset_train_percent = 0.8):
     # Распределение файлов в train и valid  составляющую датасета
     # train - 80% ; valid - 20%
 
@@ -50,8 +50,8 @@ def fill_the_dataset(dataset_name, dir_name_images, dir_name_textes):
     all_imag = os.listdir(dir_name_images)
     count_of_files = len(all_imag)
 
-    for cur_image_raw in all_imag[:int(count_of_files * 0.8)]:
-        cur_text = cur_image_raw[:-4] + '.txt'
+    for cur_image_raw in all_imag[:int(count_of_files *dataset_train_percent)]:
+        cur_text = cut_the_extension(cur_image_raw) + '.txt'
 
         cur_image = f'{dir_name_images}/{cur_image_raw}'
         cur_text = f'{dir_name_textes}/{cur_text}'
@@ -59,8 +59,8 @@ def fill_the_dataset(dataset_name, dir_name_images, dir_name_textes):
         shutil.move(cur_image, train_path_images)
         shutil.move(cur_text, train_path_labels)
 
-    for cur_image_raw in all_imag[int(count_of_files * 0.8):]:
-        cur_text = cur_image_raw[:-4] + '.txt'
+    for cur_image_raw in all_imag[int(count_of_files * dataset_train_percent):]:
+        cur_text = cut_the_extension(cur_image_raw) + '.txt'
 
         cur_image = f'{dir_name_images}/{cur_image_raw}'
         cur_text = f'{dir_name_textes}/{cur_text}'
@@ -131,3 +131,6 @@ def form_key_dict(classes_indexes: str):
     for i in range(len(classes_indexes)):
         ans[classes_indexes[i]] = i
     return ans
+
+def cut_the_extension(filepath: str):
+    return filepath.split('.')[-2]
