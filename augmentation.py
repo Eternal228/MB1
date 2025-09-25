@@ -56,11 +56,12 @@ def do_hard_augm(augmentation: str, dir_name_images, dir_name_textes):
 
     for image_path in all_imag:
         image = Image.open(f'{dir_name_images}/{image_path}')
-        example_text_path = f'{dir_name_textes}/{image_path.split('.')[-2]}.txt'
-
         ImageFile.LOAD_TRUNCATED_IMAGES = True
-        with open(example_text_path) as old_text_file:
-            old_information = old_text_file.read()
+
+        if dir_name_textes:
+            example_text_path = f'{dir_name_textes}/{image_path.split('.')[-2]}.txt'
+            with open(example_text_path) as old_text_file:
+                old_information = old_text_file.read()
 
         if augmentation == 'sharpness':
             factors = [0.5, 5]
@@ -75,8 +76,9 @@ def do_hard_augm(augmentation: str, dir_name_images, dir_name_textes):
             new_image = enhancer.enhance(factor)
             new_name = f'{dir_name_images}/{image_path.split('.')[-2]}_{augmentation}{str(i)}.{image_path.split('.')[-1]}'
             new_image.save(new_name)
-            with open(f'{dir_name_textes}/{image_path.split('.')[-2]}_{augmentation}{str(i)}' + '.txt', 'w') as new_text_file:
-                new_text_file.write(old_information)
+            if dir_name_textes:
+                with open(f'{dir_name_textes}/{image_path.split('.')[-2]}_{augmentation}{str(i)}' + '.txt', 'w') as new_text_file:
+                    new_text_file.write(old_information)
             i += 1
 
 
