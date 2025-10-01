@@ -1,5 +1,11 @@
 {
     "files": [
-        "main.py"
+        "augmentation.py",
+        "auto_annotating.py",
+        "coco_dataset_working.py",
+        "coco_mode.py",
+        "file_working.py",
+        "main.py",
+        "nonСoco_mode.py"
     ]
 }
